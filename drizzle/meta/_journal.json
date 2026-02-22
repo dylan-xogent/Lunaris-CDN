@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1771703461039,
+      "tag": "0000_curious_meltdown",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1771704320918,
+      "tag": "0001_brown_captain_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1771728421243,
+      "tag": "0002_tearful_terrax",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1771732675576,
+      "tag": "0003_open_rumiko_fujikawa",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+name = "lunaris-cdn"
+pages_build_output_dir = ".svelte-kit/cloudflare"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PUBLIC_APP_URL = "https://lunaris.win"
+PUBLIC_CDN_URL = "https://cdn.lunaris.win"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lunaris-cdn-db"
+database_id = "939ceeb9-70c4-4482-afe9-45e0dc9ab323"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "lunaris-cdn-files"
