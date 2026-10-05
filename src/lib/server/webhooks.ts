@@ -16,6 +16,49 @@ export interface WebhookPayload {
 	data: Record<string, unknown>;
 }
 
+/**
+ * Webhook targets must be public https URLs. Blocks localhost, private and
+ * link-local ranges so webhooks can't be used to probe internal services.
+ */
+export function validateWebhookUrl(raw: string): string | null {
+	let u: URL;
+	try {
+		u = new URL(raw);
+	} catch {
+		return 'Invalid URL format';
+	}
+	if (u.protocol !== 'https:') return 'Webhook URL must use https';
+	if (u.username || u.password) return 'Webhook URL must not contain credentials';
+
+	const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+	if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.internal') || h.endsWith('.local')) {
+		return 'Webhook URL must point to a public host';
+	}
+	if (h.includes(':')) {
+		// Any IPv6 literal: only allow if clearly not loopback/ULA/link-local/mapped
+		if (h === '::' || h === '::1' || /^(fc|fd|fe[89ab])/.test(h) || h.startsWith('::ffff:')) {
+			return 'Webhook URL must point to a public host';
+		}
+	}
+	const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+	if (m) {
+		const a = Number(m[1]);
+		const b = Number(m[2]);
+		if (
+			a === 0 || a === 10 || a === 127 || a >= 224 ||
+			(a === 169 && b === 254) ||
+			(a === 172 && b >= 16 && b <= 31) ||
+			(a === 192 && b === 168) ||
+			(a === 100 && b >= 64 && b <= 127)
+		) {
+			return 'Webhook URL must point to a public host';
+		}
+	} else if (/^\d+$/.test(h) || /^0x[0-9a-f]+$/i.test(h)) {
+		return 'Webhook URL must point to a public host';
+	}
+	return null;
+}
+
 async function signPayload(secret: string, body: string): Promise<string> {
 	const encoder = new TextEncoder();
 	const keyData = encoder.encode(secret);
@@ -81,6 +124,7 @@ async function deliverWebhook(
 	event: WebhookEvent,
 	payload: WebhookPayload
 ): Promise<void> {
+	if (validateWebhookUrl(wh.url)) return;
 	const isDiscord = isDiscordWebhook(wh.url);
 	const body = isDiscord ? toDiscordPayload(event, payload) : JSON.stringify(payload);
 	const signature = await signPayload(wh.secret, body);
@@ -101,6 +145,7 @@ async function deliverWebhook(
 			method: 'POST',
 			headers,
 			body,
+			redirect: 'manual',
 			signal: AbortSignal.timeout(10_000)
 		});
 

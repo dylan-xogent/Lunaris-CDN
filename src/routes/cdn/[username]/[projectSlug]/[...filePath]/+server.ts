@@ -144,7 +144,12 @@ export const GET: RequestHandler = async ({ params, url, platform, request, getC
 	const headers = new Headers();
 	headers.set('Content-Type', fileRecord.mimeType || 'application/octet-stream');
 	headers.set('Content-Length', String(fileRecord.sizeBytes));
-	headers.set('Content-Disposition', `attachment; filename="${fileRecord.fileName}"`);
+	const safeName = fileRecord.fileName.replace(/[^\w.\- ]+/g, '_');
+	headers.set(
+		'Content-Disposition',
+		`attachment; filename="${safeName}"; filename*=UTF-8''${encodeURIComponent(fileRecord.fileName)}`
+	);
+	headers.set('X-Content-Type-Options', 'nosniff');
 	headers.set('Cache-Control', cacheControl);
 	headers.set('ETag', `"${fileRecord.sha256}"`);
 	headers.set('X-Checksum-SHA256', fileRecord.sha256);

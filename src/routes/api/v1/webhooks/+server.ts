@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { createDb } from '$lib/server/db/index.js';
 import { webhook } from '$lib/server/db/schema.js';
 import { getAuthenticatedUser, jsonError, jsonSuccess } from '$lib/server/middleware.js';
-import { generateWebhookSecret, WEBHOOK_EVENTS } from '$lib/server/webhooks.js';
+import { generateWebhookSecret, validateWebhookUrl, WEBHOOK_EVENTS } from '$lib/server/webhooks.js';
 import type { RequestHandler } from './$types.js';
 
 const VALID_EVENTS = WEBHOOK_EVENTS.map((e) => e.value);
@@ -48,14 +48,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const url = typeof data.url === 'string' ? data.url.trim() : '';
 	if (!url) return jsonError('URL is required', 400);
 
-	try {
-		const parsed = new URL(url);
-		if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-			return jsonError('URL must use http or https protocol', 400);
-		}
-	} catch {
-		return jsonError('Invalid URL format', 400);
-	}
+	const urlError = validateWebhookUrl(url);
+	if (urlError) return jsonError(urlError, 400);
 
 	const events: string[] = Array.isArray(data.events) ? (data.events as string[]) : [];
 	if (events.length === 0) return jsonError('At least one event type is required', 400);

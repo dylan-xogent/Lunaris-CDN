@@ -2,7 +2,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { createDb } from '$lib/server/db/index.js';
 import { webhook, webhookDelivery } from '$lib/server/db/schema.js';
 import { getAuthenticatedUser, jsonError, jsonSuccess } from '$lib/server/middleware.js';
-import { sendTestPing, WEBHOOK_EVENTS } from '$lib/server/webhooks.js';
+import { sendTestPing, validateWebhookUrl, WEBHOOK_EVENTS } from '$lib/server/webhooks.js';
 import type { RequestHandler } from './$types.js';
 
 const VALID_EVENTS = WEBHOOK_EVENTS.map((e) => e.value);
@@ -63,14 +63,8 @@ export const PATCH: RequestHandler = async ({ params, request, platform }) => {
 
 	if (typeof data.url === 'string') {
 		const url = data.url.trim();
-		try {
-			const parsed = new URL(url);
-			if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
-				return jsonError('URL must use http or https protocol', 400);
-			}
-		} catch {
-			return jsonError('Invalid URL format', 400);
-		}
+		const urlError = validateWebhookUrl(url);
+		if (urlError) return jsonError(urlError, 400);
 		updates.url = url;
 	}
 

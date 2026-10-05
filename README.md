@@ -484,6 +484,9 @@ Lunaris CDN uses a dark-first design system built on Tailwind CSS 4:
 
 ## Webhook Events
 
+> Webhook URLs must be public `https://` endpoints. Localhost, private network ranges, and URLs with embedded credentials are rejected.
+
+
 Subscribe to events and receive POST requests with HMAC-SHA256 signed payloads:
 
 | Event | Trigger |
